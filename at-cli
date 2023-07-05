@@ -2,6 +2,7 @@
 
 THIS_FILE=$(realpath "$0")
 INSTALLED_LOCATION="/usr/local/bin/at-cli"
+AT_CLI_URL="https://raw.githubusercontent.com/csm10495/at-cli/master/at-cli"
 
 function usage() {
     echo "at-cli usage:"
@@ -133,7 +134,7 @@ if [[ "$CMD" != "" ]]; then
     elif [[ "$CMD" == "update" ]]; then
         if [[ "$THIS_FILE" == "/usr/local/bin/at-cli" ]]; then
             echo "Updating at-cli..."
-            curl -s https://raw.githubusercontent.com/csm10495/at-cli/master/at-cli > $INSTALLED_LOCATION
+            curl -s ${AT_CLI_URL} -o $INSTALLED_LOCATION
             chmod +x /usr/local/bin/at-cli
             echo "Done."
         else
@@ -144,7 +145,7 @@ if [[ "$CMD" != "" ]]; then
 
     elif [[ "$CMD" == "install" ]]; then
         echo "Installing to $INSTALLED_LOCATION"
-        curl -s https://raw.githubusercontent.com/csm10495/at-cli/master/at-cli > "$INSTALLED_LOCATION"
+        curl -s ${AT_CLI_URL} -o "$INSTALLED_LOCATION"
         echo "Done."
     fi
 else
