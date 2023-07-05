@@ -2,11 +2,11 @@
 
 THIS_FILE=$(realpath "$0")
 INSTALLED_LOCATION="/usr/local/bin/at-cli"
-AT_CLI_URL="https://raw.githubusercontent.com/csm10495/at-cli/master/at-cli"
+HTTPS_CLONE_URL="https://github.com/csm10495/at-cli.git"
 
 function usage() {
     echo "at-cli usage:"
-    echo "  at-cli <run|stop|update|install> ..."
+    echo "  at-cli <run|stop|update|install|--version> ..."
     echo ""
     echo "    -c | --count <count>         : number of containers to run"
     echo "    -i | --image <image url>     : the image to run"
@@ -32,6 +32,9 @@ elif [[ $1 == "update" ]]; then
     CMD="update"
 elif [[ $1 == "install" ]]; then
     CMD="install"
+elif [[ $1 == "--version" ]]; then
+    echo "at-cli @ commit: $COMMIT_ID"
+    exit 0
 else
     usage
 fi
@@ -64,11 +67,27 @@ function get_all_archive_team_containers() {
 }
 
 function do_install_or_update() {
-    if [ "$EUID" -ne 0 ]
-        then echo "Please run as root"
-        exit
+    if [ "$EUID" -ne 0 ]; then
+        echo "Please run as root"
+        exit 3
     fi
-    (curl -s ${AT_CLI_URL} -o $INSTALLED_LOCATION && chmod +x /usr/local/bin/at-cli && echo "Done.") || echo "Failed to $1."
+
+    tmp="$(mkdtemp)"
+    if ! git clone --depth 1 $HTTPS_CLONE_URL ${tmp} >/dev/null; then
+        echo "Failed to do shallow clone"
+        exit 4
+    fi
+
+    commitid=$(git rev-parse HEAD | head -c 6)
+
+    head -n 1 ${tmp}/at-cli  > ${tmp}/at-cli-with-commit-id
+    echo "COMMIT_ID=\"${commitid}\"" >> ${tmp}/at-cli-with-commit-id
+    tail -n +1 ${tmp}/at-cli >> ${tmp}/at-cli-with-commit-id
+
+    cp -R ${tmp}/at-cli-with-commit-id $INSTALLED_LOCATION
+    rm -rf ${tmp}
+
+    echo "Done."
 }
 
 
