@@ -99,7 +99,7 @@ function local_port_free() {
             return 1
         fi
     else
-        nc -z localhost $port &>/dev/null
+        nc -z localhost $port &>/dev/null && return 1 || return 0
     fi
 }
 
@@ -185,7 +185,7 @@ if [[ "$CMD" != "" ]]; then
 
     elif [[ "$CMD" == "install" ]]; then
         echo "Installing to $INSTALLED_LOCATION"
-        do_install_or_update install
+        do_install_or_update "install"
     fi
 else
     usage
