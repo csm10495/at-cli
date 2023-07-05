@@ -82,7 +82,7 @@ function do_install_or_update() {
 
     head -n 1 ${tmp}/at-cli  > ${tmp}/at-cli-with-commit-id
     echo "COMMIT_ID=\"${commitid}\"" >> ${tmp}/at-cli-with-commit-id
-    tail -n +1 ${tmp}/at-cli >> ${tmp}/at-cli-with-commit-id
+    tail -n +2 ${tmp}/at-cli >> ${tmp}/at-cli-with-commit-id
 
     cp -R ${tmp}/at-cli-with-commit-id $INSTALLED_LOCATION
     rm -rf ${tmp}
