@@ -26,12 +26,16 @@ DOCKER_CMD=""
 PROJECT_SET="false"
 if [[ $1 == "run" ]]; then
     CMD="run"
+    shift
 elif [[ $1 == "stop" ]]; then
     CMD="stop"
+    shift
 elif [[ $1 == "update" ]]; then
     CMD="update"
+    shift
 elif [[ $1 == "install" ]]; then
     CMD="install"
+    shift
 elif [[ $1 == "--version" ]]; then
     echo "at-cli @ commit: $COMMIT_ID"
     exit 0
@@ -124,7 +128,10 @@ if [[ "$CMD" != "" ]]; then
                 DOCKER_CMD="$2";
                 shift
                 ;;
-            /?) usage ;;
+            *)
+            echo Unknown argument: $1
+            usage
+            ;;
         esac
         shift
     done
