@@ -1,0 +1,152 @@
+#!/bin/bash
+
+THIS_FILE="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+INSTALLED_LOCATION="/usr/local/bin/at-cli"
+
+function usage() {
+    echo "at-cli usage:"
+    echo "  at-cli <run|stop|update|install> ..."
+    echo ""
+    echo "    -c | --count <count>         : number of containers to run"
+    echo "    -i | --image <image url>     : the image to run"
+    echo "    -n | --name-base <name base> : base name for containers"
+    echo "    -p | --project <project>     : project to run"
+    echo "    --cmd                        : a command to run in the container"
+
+    exit 1
+}
+
+
+COUNT=0
+CMD=""
+IMAGE=""
+PROJECT="auto"
+DOCKER_CMD=""
+PROJECT_SET="false"
+if [[ $1 == "run" ]]; then
+    CMD="run"
+elif [[ $1 == "stop" ]]; then
+    CMD="stop"
+elif [[ $1 == "update" ]]; then
+    CMD="update"
+elif [[ $1 == "install" ]]; then
+    CMD="install"
+else
+    usage
+fi
+
+function ensure_watchtower() {
+    if ! docker ps -a | grep watchtower >/dev/null; then
+        START_WATCHTOWER="docker run --detach --name watchtower --restart=on-failure --volume /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --label-enable --cleanup --interval 3600"
+        if [[ $(uname) == "MINGW"* ]]; then
+            # the / slashes confuse mingw bash
+            powershell "$START_WATCHTOWER"
+        else
+            eval "$START_WATCHTOWER"
+        fi
+    fi
+}
+
+function get_running_containers_with_label() {
+    label=$1
+    value=$2
+
+    docker ps -f "label=$label=$value" --format "{{.ID}}"
+}
+
+function get_running_containers_with_image() {
+    docker ps -f "ancestor=$1" --format "{{.ID}}"
+}
+
+function get_all_archive_team_containers() {
+    docker ps -f "name=archiveteam-warrior-*" --format "{{.ID}}"
+}
+
+
+if [[ "$CMD" != "" ]]; then
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in
+            -c|--count)
+                COUNT="$2";
+                shift
+                ;;
+            -i|--image)
+                IMAGE="$2";
+                shift
+                ;;
+            -p|--project)
+                PROJECT="$2";
+                PROJECT_SET="true"
+                shift
+                ;;
+            --cmd)
+                DOCKER_CMD="$2";
+                shift
+                ;;
+            /?) usage ;;
+        esac
+        shift
+    done
+
+
+    if [[ "$CMD" == "run" ]]; then
+        if [[ "$IMAGE" == "" ]]; then
+            echo "Missing --image/-i.. assuming: atdr.meo.ws/archiveteam/warrior-dockerfile:latest"
+            IMAGE=atdr.meo.ws/archiveteam/warrior-dockerfile:latest
+        fi
+
+        ensure_watchtower
+
+        success_count=0
+        if [[ $COUNT -gt 0 ]]; then
+            for i in $(seq 8001 10000); do
+                if docker run --detach -e DOWNLOADER=csm10495 -e SELECTED_PROJECT=$PROJECT -e CONCURRENT_ITEMS=6 -e SHARED_RSYNC_THREADS=20 --name archiveteam-warrior-$i --label=com.csm.port=$i --label=com.csm.project=$PROJECT --label=com.centurylinklabs.watchtower.enable=true --restart=on-failure --publish $i:8001 $IMAGE $DOCKER_CMD; then
+                    success_count=$((success_count+1))
+                fi
+
+                if [[ $success_count -eq $COUNT ]]; then
+                    break
+                fi
+            done
+        fi
+
+    elif [[ "$CMD" == "stop" ]]; then
+        containers_to_stop=""
+
+        if [[ $PROJECT_SET == "true" ]] || [[ -n $IMAGE ]]; then
+            containers_to_stop="$containers_to_stop $(get_running_containers_with_label "com.csm.project" $PROJECT)"
+            containers_to_stop="$containers_to_stop $(get_running_containers_with_image $IMAGE)"
+        else
+            containers_to_stop="$containers_to_stop $(get_all_archive_team_containers)"
+        fi
+
+        remove_count=0
+        for id in $containers_to_stop; do
+            docker rm -f $id
+            remove_count=$((remove_count+1))
+
+            if [ $COUNT -gt 0 ] && [ $remove_count -eq $COUNT ]; then
+                break
+            fi
+        done
+
+    elif [[ "$CMD" == "update" ]]; then
+        if [[ "$THIS_FILE" == "/usr/local/bin/at-cli" ]]; then
+            echo "Updating at-cli..."
+            curl -s https://raw.githubusercontent.com/csm10495/at-cli/master/at-cli > $INSTALLED_LOCATION
+            chmod +x /usr/local/bin/at-cli
+            echo "Done."
+        else
+            echo "This can only be updated if already installed"
+            echo "Consider running $THIS_FILE install"
+            exit 2
+        fi
+
+    elif [[ "$CMD" == "install" ]]; then
+        echo "Installing to $INSTALLED_LOCATION"
+        curl -s https://raw.githubusercontent.com/csm10495/at-cli/master/at-cli > "$INSTALLED_LOCATION"
+        echo "Done."
+    fi
+else
+    usage
+fi
