@@ -157,12 +157,12 @@ if [[ "$CMD" != "" ]]; then
         containers_to_stop=""
 
         if [[ $PROJECT_SET == "true" ]] || [[ -n $IMAGE ]]; then
-            containers_to_stop="$containers_to_stop $(get_running_containers_with_label "com.csm.project" $PROJECT)"
+            containers_to_stop="$containers_to_stop $(get_running_containers_with_label "com.csm.project" $PROJECT | xargs)"
             if [[ -n $IMAGE ]]; then
-                containers_to_stop="$containers_to_stop $(get_running_containers_with_image $IMAGE)"
+                containers_to_stop="$containers_to_stop $(get_running_containers_with_image $IMAGE | xargs)"
             fi
         else
-            containers_to_stop="$containers_to_stop $(get_all_archive_team_containers)"
+            containers_to_stop="$containers_to_stop $(get_all_archive_team_containers | xargs)"
         fi
 
         remove_count=0
