@@ -94,6 +94,9 @@ function do_install_or_update() {
     rm -rf ${tmp}
 
     echo "Done."
+
+    # exit to not go back into the now changed code
+    exit 0
 }
 
 function local_port_free() {
