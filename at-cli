@@ -72,13 +72,13 @@ function do_install_or_update() {
         exit 3
     fi
 
-    tmp="$(mkdtemp)"
-    if ! git clone --depth 1 $HTTPS_CLONE_URL ${tmp} >/dev/null; then
+    tmp="$(mktemp -d)"
+    if ! git clone --quiet --depth 1 $HTTPS_CLONE_URL ${tmp} >/dev/null; then
         echo "Failed to do shallow clone"
         exit 4
     fi
 
-    commitid=$(git rev-parse HEAD | head -c 6)
+    commitid=$(git -C ${tmp} rev-parse HEAD | head -c 6)
 
     head -n 1 ${tmp}/at-cli  > ${tmp}/at-cli-with-commit-id
     echo "COMMIT_ID=\"${commitid}\"" >> ${tmp}/at-cli-with-commit-id
