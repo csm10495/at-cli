@@ -40,6 +40,7 @@ elif [[ $1 == "--version" ]]; then
     echo "at-cli @ commit: $COMMIT_ID"
     exit 0
 else
+    echo "Unknown command: $1"
     usage
 fi
 
