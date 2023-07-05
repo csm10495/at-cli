@@ -63,6 +63,14 @@ function get_all_archive_team_containers() {
     docker ps -f "name=archiveteam-warrior-*" --format "{{.ID}}"
 }
 
+function do_install_or_update() {
+    if [ "$EUID" -ne 0 ]
+        then echo "Please run as root"
+        exit
+    fi
+    (curl -s ${AT_CLI_URL} -o $INSTALLED_LOCATION && chmod +x /usr/local/bin/at-cli && echo "Done.") || echo "Failed to $1."
+}
+
 
 if [[ "$CMD" != "" ]]; then
     while [[ "$#" -gt 0 ]]; do
@@ -134,9 +142,7 @@ if [[ "$CMD" != "" ]]; then
     elif [[ "$CMD" == "update" ]]; then
         if [[ "$THIS_FILE" == "/usr/local/bin/at-cli" ]]; then
             echo "Updating at-cli..."
-            curl -s ${AT_CLI_URL} -o $INSTALLED_LOCATION
-            chmod +x /usr/local/bin/at-cli
-            echo "Done."
+            do_install_or_update "update"
         else
             echo "This can only be updated if already installed"
             echo "Consider running $THIS_FILE install"
@@ -145,8 +151,7 @@ if [[ "$CMD" != "" ]]; then
 
     elif [[ "$CMD" == "install" ]]; then
         echo "Installing to $INSTALLED_LOCATION"
-        curl -s ${AT_CLI_URL} -o "$INSTALLED_LOCATION"
-        echo "Done."
+        do_install_or_update install
     fi
 else
     usage
