@@ -158,7 +158,9 @@ if [[ "$CMD" != "" ]]; then
 
         if [[ $PROJECT_SET == "true" ]] || [[ -n $IMAGE ]]; then
             containers_to_stop="$containers_to_stop $(get_running_containers_with_label "com.csm.project" $PROJECT)"
-            containers_to_stop="$containers_to_stop $(get_running_containers_with_image $IMAGE)"
+            if [[ -n $IMAGE ]]; then
+                containers_to_stop="$containers_to_stop $(get_running_containers_with_image $IMAGE)"
+            fi
         else
             containers_to_stop="$containers_to_stop $(get_all_archive_team_containers)"
         fi
