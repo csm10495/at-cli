@@ -128,7 +128,7 @@ if [[ "$CMD" != "" ]]; then
         success_count=0
         if [[ $COUNT -gt 0 ]]; then
             for i in $(seq 8001 10000); do
-                if docker run --detach -e DOWNLOADER=csm10495 -e SELECTED_PROJECT=$PROJECT -e CONCURRENT_ITEMS=6 -e SHARED_RSYNC_THREADS=20 --name archiveteam-warrior-$i --label=com.csm.port=$i --label=com.csm.project=$PROJECT --label=com.centurylinklabs.watchtower.enable=true --restart=on-failure --publish $i:8001 $IMAGE $DOCKER_CMD; then
+                if docker run --detach -e DOWNLOADER=csm10495 -e SELECTED_PROJECT=$PROJECT -e CONCURRENT_ITEMS=6 -e SHARED_RSYNC_THREADS=20 --name "archiveteam-warrior-$PROJECT-$i" --label=com.csm.port=$i --label=com.csm.project=$PROJECT --label=com.centurylinklabs.watchtower.enable=true --restart=unless-stopped --publish $i:8001 $IMAGE $DOCKER_CMD; then
                     success_count=$((success_count+1))
                 fi
 
