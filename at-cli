@@ -84,7 +84,7 @@ function do_install_or_update() {
     fi
 
     commitid=$(git -C ${tmp} rev-parse HEAD | head -c 6)
-    if [[ "$commitid" != "$COMMIT_ID"]]; then
+    if [[ "$commitid" != "$COMMIT_ID" ]]; then
         echo "Commit ID: $commitid"
 
         head -n 1 ${tmp}/at-cli  > ${tmp}/at-cli-with-commit-id
