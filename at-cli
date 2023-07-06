@@ -6,7 +6,7 @@ HTTPS_CLONE_URL="https://github.com/csm10495/at-cli.git"
 
 function usage() {
     echo "at-cli usage:"
-    echo "  at-cli <run|stop|update|install|--version> ..."
+    echo "  at-cli <start|stop|update|install|--version> ..."
     echo ""
     echo "    -c | --count <count>         : number of containers to run"
     echo "    -i | --image <image url>     : the image to run"
