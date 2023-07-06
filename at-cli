@@ -71,6 +71,18 @@ function get_all_archive_team_containers() {
     docker ps -f "name=archiveteam-warrior-*" --format "{{.ID}}"
 }
 
+function get_container_name_from_id() {
+    docker inspect "$1" --format '{{.Name}}' | cut -d "/" -f 2-
+}
+
+function get_project_from_container() {
+    docker inspect "$1" --format '{{index .Config.Labels "com.csm.project"}}'
+}
+
+function get_port_from_container() {
+    docker inspect "$1" --format '{{index .Config.Labels "com.csm.port"}}'
+}
+
 function do_install_or_update() {
     if [ "$EUID" -ne 0 ]; then
         echo "Please run as root"
@@ -191,6 +203,30 @@ if [[ "$CMD" != "" ]]; then
             fi
         done
 
+    elif [[ "$CMD" == "list" ]]; then
+        if [[ $PROJECT_SET == "true" ]] || [[ -n $IMAGE ]]; then
+            matching_containers="$containers_to_stop $(get_running_containers_with_label "com.csm.project" $PROJECT | xargs)"
+            if [[ -n $IMAGE ]]; then
+                matching_containers="$containers_to_stop $(get_running_containers_with_image $IMAGE | xargs)"
+            fi
+        else
+            matching_containers="$containers_to_stop $(get_all_archive_team_containers | xargs)"
+        fi
+
+        declare -A project_counts
+        for id in $matching_containers; do
+            project=$(get_project_from_container $id)
+            if [[ -z ${project_counts[$project]} ]]; then
+                project_counts[$project]=1
+            else
+                project_counts[$project]=$((project_counts[$project]+1))
+            fi
+        done
+
+        # print out project_counts
+        for project in "${!project_counts[@]}"; do
+            echo "$project: ${project_counts[$project]}"
+        done
     elif [[ "$CMD" == "update" ]]; then
         if [[ "$THIS_FILE" == "/usr/local/bin/at-cli" ]]; then
             echo "Updating at-cli..."
