@@ -24,8 +24,8 @@ IMAGE=""
 PROJECT="auto"
 DOCKER_CMD=""
 PROJECT_SET="false"
-if [[ $1 == "run" ]]; then
-    CMD="run"
+if [[ $1 == "start" ]]; then
+    CMD="start"
     shift
 elif [[ $1 == "stop" ]]; then
     CMD="stop"
@@ -84,16 +84,20 @@ function do_install_or_update() {
     fi
 
     commitid=$(git -C ${tmp} rev-parse HEAD | head -c 6)
-    echo "Commit ID: $commitid"
+    if [[ "$commitid" != "$COMMIT_ID"]]; then
+        echo "Commit ID: $commitid"
 
-    head -n 1 ${tmp}/at-cli  > ${tmp}/at-cli-with-commit-id
-    echo "COMMIT_ID=\"${commitid}\"" >> ${tmp}/at-cli-with-commit-id
-    tail -n +2 ${tmp}/at-cli >> ${tmp}/at-cli-with-commit-id
+        head -n 1 ${tmp}/at-cli  > ${tmp}/at-cli-with-commit-id
+        echo "COMMIT_ID=\"${commitid}\"" >> ${tmp}/at-cli-with-commit-id
+        tail -n +2 ${tmp}/at-cli >> ${tmp}/at-cli-with-commit-id
 
-    cp -R ${tmp}/at-cli-with-commit-id $INSTALLED_LOCATION
-    rm -rf ${tmp}
+        cp -R ${tmp}/at-cli-with-commit-id $INSTALLED_LOCATION
+        rm -rf ${tmp}
 
-    echo "Done."
+        echo "Done."
+    else
+        echo "Already up to date: ${COMMIT_ID}"
+    fi
 
     # exit to not go back into the now changed code
     exit 0
@@ -142,7 +146,7 @@ if [[ "$CMD" != "" ]]; then
     done
 
 
-    if [[ "$CMD" == "run" ]]; then
+    if [[ "$CMD" == "start" ]]; then
         if [[ "$IMAGE" == "" ]]; then
             echo "Missing --image/-i.. assuming: atdr.meo.ws/archiveteam/warrior-dockerfile:latest"
             IMAGE=atdr.meo.ws/archiveteam/warrior-dockerfile:latest
