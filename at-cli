@@ -107,6 +107,7 @@ function do_install_or_update() {
         tail -n +2 ${tmp}/at-cli >> ${tmp}/at-cli-with-commit-id
 
         cp -R ${tmp}/at-cli-with-commit-id $INSTALLED_LOCATION
+        chmod +x "$INSTALLED_LOCATION"
         rm -rf ${tmp}
 
         echo "Done."
